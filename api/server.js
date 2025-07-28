@@ -1,8 +1,7 @@
-
-const express = require('express');
-const { Pool } = require('pg');
-const cors = require('cors');
-const bodyParser = require('body-parser');
+const express = require("express");
+const { Pool } = require("pg");
+const cors = require("cors");
+const bodyParser = require("body-parser");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,11 +9,12 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('.'));
+app.use(express.static("."));
 
 // NeonDB connection
 const pool = new Pool({
-  connectionString: 'postgresql://neondb_owner:npg_EnFX0g5iMAuC@ep-autumn-art-ad9r1tat-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+  connectionString:
+    "postgresql://neondb_owner:npg_EnFX0g5iMAuC@ep-autumn-art-ad9r1tat-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
 });
 
 // Initialize database
@@ -40,60 +40,58 @@ async function initializeDatabase() {
         registration_date TIMESTAMP NOT NULL
       )
     `);
-    console.log('Database initialized successfully');
+    console.log("Database initialized successfully");
   } catch (error) {
-    console.error('Error initializing database:', error);
+    console.error("Error initializing database:", error);
   }
 }
 
 // Initialize database on startup
 initializeDatabase();
 
-
-
 // API endpoint to check for duplicate email or phone
-app.post('/api/check-duplicate', async (req, res) => {
+app.post("/api/check-duplicate", async (req, res) => {
   try {
     const { email, phone } = req.body;
 
     // Check if email exists
     const emailResult = await pool.query(
-      'SELECT email FROM registrations WHERE email = $1',
+      "SELECT email FROM registrations WHERE email = $1",
       [email]
     );
 
     if (emailResult.rows.length > 0) {
-      return res.json({ duplicate: 'email' });
+      return res.json({ duplicate: "email" });
     }
 
     // Check if phone exists
     const phoneResult = await pool.query(
-      'SELECT phone FROM registrations WHERE phone = $1',
+      "SELECT phone FROM registrations WHERE phone = $1",
       [phone]
     );
 
     if (phoneResult.rows.length > 0) {
-      return res.json({ duplicate: 'phone' });
+      return res.json({ duplicate: "phone" });
     }
 
     // No duplicates found
     return res.json({ duplicate: false });
   } catch (error) {
-    console.error('Error checking for duplicates:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error("Error checking for duplicates:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 // API endpoint to submit registration
-app.post('/api/submit-registration', async (req, res) => {
-  console.log("okay")
+app.post("/api/submit-registration", async (req, res) => {
+  console.log("okay");
   try {
     const {
       fullName,
-      
+
       email,
       phone,
-      
+
       age,
       currentStatus,
       university,
@@ -103,10 +101,10 @@ app.post('/api/submit-registration', async (req, res) => {
       careerInterest,
       hearAbout,
       receiveUpdates,
-      registrationDate
+      registrationDate,
     } = req.body;
-    const [firstName, lastName] = fullName.split(' ')
-    console.log(firstName,lastName)
+    const [firstName, lastName] = fullName.split(" ");
+    console.log(firstName, lastName);
 
     // Insert registration into database
     await pool.query(
@@ -120,7 +118,7 @@ app.post('/api/submit-registration', async (req, res) => {
         lastName,
         email,
         phone,
-        
+
         age,
         currentStatus,
         university,
@@ -130,36 +128,35 @@ app.post('/api/submit-registration', async (req, res) => {
         careerInterest,
         hearAbout,
         receiveUpdates,
-        registrationDate
+        registrationDate,
       ]
     );
 
-
     res.json({ success: true });
   } catch (error) {
-    console.error('Error submitting registration:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error("Error submitting registration:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
- 
+
 // Function to send confirmation email with QR code
 async function sendConfirmationEmail(email, firstName) {
   try {
     // Generate a unique QR code for the registration
     const registrationId = `GTT2025-${firstName}-${Date.now()}`;
     const qrCodeData = `https://edikefoundation.com/gtt2025/verify?id=${registrationId}`;
-    
+
     // Generate QR code as data URL
     const qrCodeDataUrl = await QRCode.toDataURL(qrCodeData);
-    
+
     // For now, we'll simulate email sending success since we're having authentication issues
     // In a production environment, you would use actual SMTP credentials
-    
+
     // Log the QR code data for testing purposes
-    console.log('QR Code generated for:', firstName);
-    console.log('Registration ID:', registrationId);
-    console.log('QR Code data URL generated successfully');
-    
+    console.log("QR Code generated for:", firstName);
+    console.log("Registration ID:", registrationId);
+    console.log("QR Code data URL generated successfully");
+
     // Uncomment this code when you have valid SMTP credentials
     /*
     // Create a transporter using the provided email credentials
@@ -203,54 +200,49 @@ async function sendConfirmationEmail(email, firstName) {
     });
     console.log('Confirmation email sent:', info.messageId);
     */
-    
+
     // For testing purposes, we'll simulate success
-    console.log('Confirmation email would be sent to:', email);
+    console.log("Confirmation email would be sent to:", email);
     return true;
   } catch (error) {
-    console.error('Error in confirmation email process:', error);
+    console.error("Error in confirmation email process:", error);
     return false;
   }
 }
 
 // Test endpoint to verify database connection
-app.get('/api/test-connection', async (req, res) => {
+app.get("/api/test-connection", async (req, res) => {
   try {
-    const result = await pool.query('SELECT NOW() as current_time');
+    const result = await pool.query("SELECT NOW() as current_time");
     res.json({
       success: true,
-      message: 'Database connection successful',
+      message: "Database connection successful",
       timestamp: result.rows[0].current_time,
-      database: 'NeonDB'
+      database: "NeonDB",
     });
   } catch (error) {
-    console.error('Database connection test failed:', error);
+    console.error("Database connection test failed:", error);
     res.status(500).json({
       success: false,
-      message: 'Database connection failed',
-      error: error.message
+      message: "Database connection failed",
+      error: error.message,
     });
   }
 });
 
 // Endpoint to get all registrations (for testing only)
-app.get('/api/registrations', async (req, res) => {
+app.get("/api/registrations", async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM registrations');
+    const result = await pool.query("SELECT * FROM registrations");
     res.json({
       success: true,
       count: result.rows.length,
-      data: result.rows
+      data: result.rows,
     });
   } catch (error) {
-    console.error('Error fetching registrations:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error("Error fetching registrations:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`Test database connection: http://localhost:${port}/api/test-connection`);
-  console.log(`View all registrations: http://localhost:${port}/api/registrations`);
-});
+module.exports = app;
