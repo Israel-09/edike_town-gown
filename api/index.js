@@ -17,37 +17,37 @@ const pool = new Pool({
     "postgresql://neondb_owner:npg_EnFX0g5iMAuC@ep-autumn-art-ad9r1tat-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
 });
 
-// Initialize database
-async function initializeDatabase() {
-  try {
-    // Create registrations table if it doesn't exist
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS registrations (
-        id SERIAL PRIMARY KEY,
-        first_name VARCHAR(100) NOT NULL,
-        last_name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
-        phone VARCHAR(20) UNIQUE NOT NULL,
-        age VARCHAR(20) NOT NULL,
-        current_status VARCHAR(50) NOT NULL,
-        university VARCHAR(200) NOT NULL,
-        course VARCHAR(200) NOT NULL,
-        level VARCHAR(100) NOT NULL,
-        why_attend TEXT NOT NULL,
-        career_interest VARCHAR(100) NOT NULL,
-        hear_about VARCHAR(100) NOT NULL,
-        receive_updates VARCHAR(10) NOT NULL,
-        registration_date TIMESTAMP NOT NULL
-      )
-    `);
-    console.log("Database initialized successfully");
-  } catch (error) {
-    console.error("Error initializing database:", error);
-  }
-}
+// // Initialize database
+// async function initializeDatabase() {
+//   try {
+//     // Create registrations table if it doesn't exist
+//     await pool.query(`
+//       CREATE TABLE IF NOT EXISTS registrations (
+//         id SERIAL PRIMARY KEY,
+//         first_name VARCHAR(100) NOT NULL,
+//         last_name VARCHAR(100) NOT NULL,
+//         email VARCHAR(100) UNIQUE NOT NULL,
+//         phone VARCHAR(20) UNIQUE NOT NULL,
+//         age VARCHAR(20) NOT NULL,
+//         current_status VARCHAR(50) NOT NULL,
+//         university VARCHAR(200) NOT NULL,
+//         course VARCHAR(200) NOT NULL,
+//         level VARCHAR(100) NOT NULL,
+//         why_attend TEXT NOT NULL,
+//         career_interest VARCHAR(100) NOT NULL,
+//         hear_about VARCHAR(100) NOT NULL,
+//         receive_updates VARCHAR(10) NOT NULL,
+//         registration_date TIMESTAMP NOT NULL
+//       )
+//     `);
+//     console.log("Database initialized successfully");
+//   } catch (error) {
+//     console.error("Error initializing database:", error);
+//   }
+// }
 
-// Initialize database on startup
-initializeDatabase();
+// // Initialize database on startup
+// initializeDatabase();
 
 // API endpoint to check for duplicate email or phone
 app.post("/api/check-duplicate", async (req, res) => {
@@ -88,10 +88,8 @@ app.post("/api/submit-registration", async (req, res) => {
   try {
     const {
       fullName,
-
       email,
       phone,
-
       age,
       currentStatus,
       university,
@@ -105,6 +103,18 @@ app.post("/api/submit-registration", async (req, res) => {
     } = req.body;
     const [firstName, lastName] = fullName.split(" ");
     console.log(firstName, lastName);
+
+    const countResponse = await pool.query(
+      "SELECT COUNT(*) FROM registrations"
+    );
+    const registeredUsers = countResponse.rows[0].count;
+    console.log("Registered users count:", registeredUsers);
+    if (registeredUsers > 100) {
+      res.status(403).json({
+        message: "Maximum number of participants reached",
+      });
+      return;
+    }
 
     // Insert registration into database
     await pool.query(
@@ -243,6 +253,11 @@ app.get("/api/registrations", async (req, res) => {
     console.error("Error fetching registrations:", error);
     res.status(500).json({ error: "Server error" });
   }
+});
+
+// Start the server
+app.listen(3000, () => {
+  console.log("Server is running on port 3000");
 });
 
 module.exports = app;
