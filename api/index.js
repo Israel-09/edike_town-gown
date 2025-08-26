@@ -84,7 +84,6 @@ app.post("/api/check-duplicate", async (req, res) => {
 
 // API endpoint to submit registration
 app.post("/api/submit-registration", async (req, res) => {
-  
   try {
     const {
       fullName,
@@ -109,7 +108,7 @@ app.post("/api/submit-registration", async (req, res) => {
     );
     const registeredUsers = countResponse.rows[0].count;
     console.log("Registered users count:", registeredUsers);
-    if (registeredUsers > 100) {
+    if (registeredUsers > 200) {
       res.status(403).json({
         message: "Maximum number of participants reached",
       });
