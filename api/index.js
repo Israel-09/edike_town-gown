@@ -84,7 +84,7 @@ app.post("/api/check-duplicate", async (req, res) => {
 
 // API endpoint to submit registration
 app.post("/api/submit-registration", async (req, res) => {
-  console.log("okay");
+  
   try {
     const {
       fullName,
@@ -145,80 +145,16 @@ app.post("/api/submit-registration", async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Error submitting registration:", error);
-    res.status(500).json({ error: "Server error" });
+    let message = "Something went wrong. Please try again later.";
+    if (error.code === "23505") {
+      message =
+        "You have already registered. Check your email for the next steps.";
+    } else if (error.code === "23502") {
+      message = "Please fill in all required fields.";
+    }
+    res.status(500).json({ error: message });
   }
 });
-
-// Function to send confirmation email with QR code
-async function sendConfirmationEmail(email, firstName) {
-  try {
-    // Generate a unique QR code for the registration
-    const registrationId = `GTT2025-${firstName}-${Date.now()}`;
-    const qrCodeData = `https://edikefoundation.com/gtt2025/verify?id=${registrationId}`;
-
-    // Generate QR code as data URL
-    const qrCodeDataUrl = await QRCode.toDataURL(qrCodeData);
-
-    // For now, we'll simulate email sending success since we're having authentication issues
-    // In a production environment, you would use actual SMTP credentials
-
-    // Log the QR code data for testing purposes
-    console.log("QR Code generated for:", firstName);
-    console.log("Registration ID:", registrationId);
-    console.log("QR Code data URL generated successfully");
-
-    // Uncomment this code when you have valid SMTP credentials
-    /*
-    // Create a transporter using the provided email credentials
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'your-email@example.com',
-        pass: 'your-app-password'
-      }
-    });
-
-    // Send email with QR code
-    const info = await transporter.sendMail({
-      from: '"Edike Foundation" <noreply@edikefoundation.com>',
-      to: email,
-      subject: 'Gown to town confirmation',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #44AF89; border-radius: 10px;">
-          <div style="background-color: #1E2636; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0;">Registration Confirmed!</h1>
-          </div>
-          <div style="padding: 20px;">
-            <p>Hello ${firstName},</p>
-            <p>Thank you for registering for <strong>Gown to Town 2025</strong>. Your application has been received and is being processed.</p>
-            <p>Please find your unique QR code below. You will need to present this QR code at the event for verification:</p>
-            <div style="text-align: center; margin: 20px 0;">
-              <img src="${qrCodeDataUrl}" alt="Registration QR Code" style="max-width: 200px; height: auto;">
-              <p style="margin-top: 10px; font-size: 12px; color: #666;">Registration ID: ${registrationId}</p>
-            </div>
-            <p>We will be in touch soon with further details about the event.</p>
-            <p>If you have any questions, please don't hesitate to contact us.</p>
-            <p>Best regards,<br>The Edike Foundation Team</p>
-          </div>
-          <div style="background-color: #44AF89; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
-            <p style="color: #ffffff; margin: 0;">© 2025 Edike Foundation. All rights reserved.</p>
-          </div>
-        </div>
-      `,
-    });
-    console.log('Confirmation email sent:', info.messageId);
-    */
-
-    // For testing purposes, we'll simulate success
-    console.log("Confirmation email would be sent to:", email);
-    return true;
-  } catch (error) {
-    console.error("Error in confirmation email process:", error);
-    return false;
-  }
-}
 
 // Test endpoint to verify database connection
 app.get("/api/test-connection", async (req, res) => {
